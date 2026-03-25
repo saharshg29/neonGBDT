@@ -1,0 +1,29 @@
+# Python
+venv/
+__pycache__/
+*.py[cod]
+*$py.class
+.DS_Store
+
+# C++ Build artifacts
+*.o
+*.dSYM/
+gboost
+gboost_bench
+gboost_profile
+
+# Generated data and results
+full_output.txt
+ablation_results.txt
+profile_summary.txt
+comparison_results.json
+generated_predictor.c
+results/*.json
+
+# Generated figures
+figures/*.pdf
+figures/*.png
+
+# LaTeX Build
+paper
+

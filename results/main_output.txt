@@ -1,0 +1,280 @@
+============================================================
+  Compiler / Platform Information
+============================================================
+  Compiler: Apple Clang 17.0.0
+  Architecture: AArch64 (ARM64)
+  SIMD: ARM NEON (128-bit, float64x2)
+  FMA: Yes (vfmaq_f64)
+  Optimization: ON
+  sizeof(HistEntry) = 24 bytes
+  sizeof(TreeNode)  = 32 bytes
+
+============================================================
+  EXPERIMENT 1: Gradient Boosting — NEON vs Scalar
+============================================================
+  Train: 50000 × 20
+  Test:  10000 × 20
+
+--- NEON SIMD Path ---
+
+[1] Binning data (256 bins)...
+  [TIMER] Binning: 17.77 ms
+  [TIMER] Column-major transform: 8.23 ms
+[2] Training 50 trees...
+    Tree   1/50  RMSE=4.629050
+    Tree  10/50  RMSE=2.619907
+    Tree  20/50  RMSE=1.736191
+    Tree  30/50  RMSE=1.354826
+    Tree  40/50  RMSE=1.180162
+    Tree  50/50  RMSE=1.093491
+  [TIMER] Total training: 430.81 ms
+  Test RMSE: 1.16
+
+--- Generated C Code (first 50 lines) ---
+  // Auto-generated gradient boosting predictor
+  // Trees: 50, LR: 0.1000000000
+  
+  #include <stddef.h>
+  
+  static double tree_0(const float* x) {
+    if (x[3] <= 0.4885559082f) {
+      if (x[0] <= 0.3223135769f) {
+        if (x[4] <= 0.4745554924f) {
+          if (x[3] <= 0.1754064709f) {
+            if (x[0] <= 0.1973105222f) {
+              if (x[2] <= 0.1562486291f) {
+                return -7.1624339314;
+              } else {
+                return -9.6246576111;
+              }
+            } else {
+              if (x[1] <= 0.4904732108f) {
+                return -8.6896514929;
+              } else {
+                return -5.0352826347;
+              }
+            }
+          } else {
+            if (x[1] <= 0.4712847769f) {
+              if (x[2] <= 0.8819112778f) {
+                return -7.4278138323;
+              } else {
+                return -4.7087500282;
+              }
+            } else {
+              if (x[0] <= 0.1399468482f) {
+                return -6.6315624648;
+              } else {
+                return -3.2498394154;
+              }
+            }
+          }
+        } else {
+          if (x[1] <= 0.5406479239f) {
+            if (x[3] <= 0.2134348154f) {
+              if (x[2] <= 0.1719999164f) {
+                return -4.7815878538;
+              } else {
+                return -7.0950960147;
+              }
+            } else {
+              if (x[2] <= 0.8740879893f) {
+                return -4.6246405603;
+              } else {
+  ... (12755 total lines)
+
+  Saved to: generated_predictor.c
+
+--- Scalar Path ---
+
+[1] Binning data (256 bins)...
+  [TIMER] Binning: 16.55 ms
+  [TIMER] Column-major transform: 7.87 ms
+[2] Training 50 trees...
+    Tree   1/50  RMSE=4.629050
+    Tree  10/50  RMSE=2.619907
+    Tree  20/50  RMSE=1.736191
+    Tree  30/50  RMSE=1.354826
+    Tree  40/50  RMSE=1.180162
+    Tree  50/50  RMSE=1.093491
+  [TIMER] Total training: 420.20 ms
+  Test RMSE: 1.16
+
+--- Experiment 1 Summary ---
+  NEON   training: 456.9 ms  |  RMSE: 1.157667
+  Scalar training: 444.7 ms  |  RMSE: 1.157667
+  Speedup: 0.97×
+
+============================================================
+  EXPERIMENT 2: Sparse vs Dense Feature Handling
+============================================================
+
+--- Sparsity = 0% ---
+
+------------------------------------------------------------
+  Sparse vs Dense Histogram Benchmark
+------------------------------------------------------------
+  Density: 100.0%
+  Dense  storage: 781 KB
+  Sparse storage: 1640 KB
+  Dense  Scalar:  23.64 ms (100 iters × 20 features)
+  Dense  NEON:    16.97 ms
+  Sparse (CSR):   164.27 ms
+
+--- Sparsity = 50% ---
+
+------------------------------------------------------------
+  Sparse vs Dense Histogram Benchmark
+------------------------------------------------------------
+  Density: 62.6%
+  Dense  storage: 781 KB
+  Sparse storage: 1055 KB
+  Dense  Scalar:  29.03 ms (100 iters × 20 features)
+  Dense  NEON:    25.29 ms
+  Sparse (CSR):   228.91 ms
+
+--- Sparsity = 80% ---
+
+------------------------------------------------------------
+  Sparse vs Dense Histogram Benchmark
+------------------------------------------------------------
+  Density: 40.1%
+  Dense  storage: 781 KB
+  Sparse storage: 703 KB
+  Dense  Scalar:  46.01 ms (100 iters × 20 features)
+  Dense  NEON:    27.10 ms
+  Sparse (CSR):   210.08 ms
+
+--- Sparsity = 95% ---
+
+------------------------------------------------------------
+  Sparse vs Dense Histogram Benchmark
+------------------------------------------------------------
+  Density: 28.7%
+  Dense  storage: 781 KB
+  Sparse storage: 526 KB
+  Dense  Scalar:  48.50 ms (100 iters × 20 features)
+  Dense  NEON:    20.43 ms
+  Sparse (CSR):   177.30 ms
+
+============================================================
+  EXPERIMENT 3: Compiled Tree Evaluator (Templates)
+============================================================
+
+[1] Binning data (64 bins)...
+  [TIMER] Binning: 17.02 ms
+  [TIMER] Column-major transform: 5.19 ms
+[2] Training 10 trees...
+    Tree   1/10  RMSE=4.685972
+    Tree  10/10  RMSE=2.993434
+  [TIMER] Total training: 49.53 ms
+  Regular tree eval:  37.89 ms
+  Compiled tree eval: 22.38 ms
+  Speedup: 1.69×
+  Correctness: PASS ✓
+
+============================================================
+  EXPERIMENT 4: Compiler Flag Ablation Guide
+============================================================
+
+  Re-compile with each flag set and compare timings:
+
+  | Flag                | What it does                              |
+  |---------------------|-------------------------------------------|
+  | -O0                 | No optimization (baseline)                |
+  | -O2                 | Standard optimization                     |
+  | -O3                 | Aggressive (vectorization, inline)         |
+  | -Os                 | Size optimization                         |
+  | -mcpu=apple-m1      | Apple M1 tuning                           |
+  | -mcpu=apple-m2      | Apple M2 tuning                           |
+  | -mcpu=native        | Auto-detect (may not work on all clang)   |
+  | -flto               | Link-time optimization                    |
+  | -fprofile-generate   | PGO: generate profile data                |
+  | -fprofile-use        | PGO: use profile for optimization         |
+
+  Ablation script for macOS:
+
+    for OPT in "-O0" "-O1" "-O2" "-O3" "-O3 -mcpu=apple-m1" \
+               "-O3 -mcpu=apple-m1 -flto"; do
+      echo "=== $OPT ==="
+      clang++ -std=c++17 $OPT -o gboost gboost_neon.cpp 2>/dev/null
+      ./gboost 2>&1 | grep -E "TIMER|Speedup|RMSE"
+      echo ""
+    done
+
+============================================================
+  EXPERIMENT 5: Histogram Bin Count vs Accuracy/Speed
+============================================================
+
+  Bins  Train (ms)    RMSE          Infer (ms)    
+  ------------------------------------------------
+
+[1] Binning data (16 bins)...
+  [TIMER] Binning: 17.94 ms
+  [TIMER] Column-major transform: 2.83 ms
+[2] Training 30 trees...
+    Tree 1  /30  RMSE=4.630868
+    Tree 10 /30  RMSE=2.644197
+    Tree 20 /30  RMSE=1.771542
+    Tree 30 /30  RMSE=1.411107
+  [TIMER] Total training: 273.84 ms
+  16    294.7         1.419834      2.18          
+
+[1] Binning data (32 bins)...
+  [TIMER] Binning: 16.81 ms
+  [TIMER] Column-major transform: 3.89 ms
+[2] Training 30 trees...
+    Tree 1  /30  RMSE=4.630086
+    Tree 10 /30  RMSE=2.631519
+    Tree 20 /30  RMSE=1.739456
+    Tree 30 /30  RMSE=1.367472
+  [TIMER] Total training: 262.84 ms
+  32    283.6         1.391026      2.24          
+
+[1] Binning data (64 bins)...
+  [TIMER] Binning: 17.10 ms
+  [TIMER] Column-major transform: 5.03 ms
+[2] Training 30 trees...
+    Tree 1  /30  RMSE=4.630661
+    Tree 10 /30  RMSE=2.626274
+    Tree 20 /30  RMSE=1.727271
+    Tree 30 /30  RMSE=1.361667
+  [TIMER] Total training: 285.77 ms
+  64    308.0         1.392848      2.11          
+
+[1] Binning data (128 bins)...
+  [TIMER] Binning: 17.20 ms
+  [TIMER] Column-major transform: 6.36 ms
+[2] Training 30 trees...
+    Tree 1  /30  RMSE=4.629265
+    Tree 10 /30  RMSE=2.623310
+    Tree 20 /30  RMSE=1.726556
+    Tree 30 /30  RMSE=1.346004
+  [TIMER] Total training: 265.94 ms
+  128   289.6         1.383966      2.25          
+
+[1] Binning data (256 bins)...
+  [TIMER] Binning: 17.77 ms
+  [TIMER] Column-major transform: 8.02 ms
+[2] Training 30 trees...
+    Tree 1  /30  RMSE=4.629050
+    Tree 10 /30  RMSE=2.619907
+    Tree 20 /30  RMSE=1.736191
+    Tree 30 /30  RMSE=1.354826
+  [TIMER] Total training: 279.64 ms
+  256   305.5         1.396021      2.25          
+
+============================================================
+  All experiments complete.
+============================================================
+
+  Output files:
+    generated_predictor.c  — compilable C inference code
+
+  Next steps:
+    1. Run ablation script (Experiment 4)
+    2. Profile with Instruments:
+       xcrun xctrace record --template 'Time Profiler' --launch ./gboost
+    3. Compare against XGBoost Python:
+       pip install xgboost && python compare_xgb.py
+

@@ -1,0 +1,81 @@
+
+%% ============================================================
+%% TABLE 1: NEON SIMD vs Scalar Training Performance
+%% ============================================================
+\begin{table}[h]
+\centering
+\caption{Training performance comparison: ARM NEON SIMD vs scalar 
+implementation on Friedman \#1 dataset (50,000 samples, 20 features, 
+50 trees, 256 bins).}
+\label{tab:simd_vs_scalar}
+\begin{tabular}{lrrr}
+\toprule
+\textbf{Implementation} & \textbf{Train Time (ms)} & \textbf{Test RMSE} 
+& \textbf{Relative} \\
+\midrule
+Scalar & 444.7 & 1.157667 & 1.00$\times$ \\
+NEON SIMD & 456.9 & 1.157667 & 1.69$\times$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+%% ============================================================
+%% TABLE 2: Dense vs Sparse Histogram Construction
+%% ============================================================
+\begin{table}[h]
+\centering
+\caption{Histogram construction time (ms) across sparsity levels 
+(10,000 samples, 20 features, 100 iterations $\times$ 20 features).}
+\label{tab:sparse_dense}
+\begin{tabular}{rrrrr}
+\toprule
+\textbf{Sparsity} & \textbf{Density} & \textbf{Dense Scalar} 
+& \textbf{Dense NEON} & \textbf{Sparse CSR} \\
+\midrule
+0\% & 100.0\% & 23.64 & 16.97 & 164.27 \\
+50\% & 62.6\% & 29.03 & 25.29 & 228.91 \\
+80\% & 40.1\% & 46.01 & 27.10 & 210.08 \\
+95\% & 28.7\% & 48.50 & 20.43 & 177.30 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+%% ============================================================
+%% TABLE 3: Template-Compiled Tree Evaluator
+%% ============================================================
+\begin{table}[h]
+\centering
+\caption{Tree evaluation: standard traversal vs template-compiled 
+(1000 iterations $\times$ 10,000 samples, depth-4 tree).}
+\label{tab:compiled_eval}
+\begin{tabular}{lrr}
+\toprule
+\textbf{Method} & \textbf{Time (ms)} & \textbf{Speedup} \\
+\midrule
+Standard (pointer-chasing) & 37.89 & 1.00$\times$ \\
+Template-compiled (depth 4) & 22.38 & 1.69$\times$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+%% ============================================================
+%% TABLE 4: Histogram Bin Count Ablation
+%% ============================================================
+\begin{table}[h]
+\centering
+\caption{Effect of histogram bin count on training time and accuracy 
+(30 trees, max depth 6).}
+\label{tab:bin_ablation}
+\begin{tabular}{rrrr}
+\toprule
+\textbf{Bins} & \textbf{Train (ms)} & \textbf{RMSE} 
+& \textbf{Infer (ms)} \\
+\midrule
+16 & 294.7 & 1.419834 & 2.18 \\
+32 & 283.6 & 1.391026 & 2.24 \\
+64 & 308.0 & 1.392848 & 2.11 \\
+128 & 289.6 & 1.383966 & 2.25 \\
+256 & 305.5 & 1.396021 & 2.25 \\
+\bottomrule
+\end{tabular}
+\end{table}
