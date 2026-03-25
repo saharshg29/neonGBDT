@@ -22,7 +22,6 @@ results/*.json
 
 # Generated figures
 figures/*.pdf
-figures/*.png
 
 # LaTeX Build
 paper
