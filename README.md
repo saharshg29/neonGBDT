@@ -160,53 +160,53 @@ Two passes are needed for cross-references.
 Using ARM NEON 128-bit vectorization yields significant speedups over scalar execution, particularly for datasets with larger feature counts. For example, Covertype (54 features) sees a 2.35&times; speedup, while narrower datasets like Friedman (20 features) may see regression if overhead dominates.
 
 <p align="center">
-  <img src="figures/fig9_simd_speedup_datasets.png" alt="SIMD Speedup Across Datasets" width="700">
+  <img src="./figures/fig9_simd_speedup_datasets.png" alt="SIMD Speedup Across Datasets" width="700">
 </p>
 
 ### 2. Cache and Memory Architecture Profiling
 Advanced hardware counter analysis reveals a sharp 2&times; latency cliff right at the 64KB L1 data cache boundary. Keeping the working set (e.g., histogram bins) within L1 is critical for optimal GBDT performance on Apple Silicon.
 
 <p align="center">
-  <img src="figures/fig11_cache_analysis.png" alt="Cache Analysis" width="48%">
-  <img src="figures/fig12_branch_prediction.png" alt="Branch Prediction" width="48%">
+  <img src="./figures/fig11_cache_analysis.png" alt="Cache Analysis" width="48%">
+  <img src="./figures/fig12_branch_prediction.png" alt="Branch Prediction" width="48%">
 </p>
 
 ### 3. Multi-Threading Scaling
 Scaling across multiple threads is near-ideal on the 4 Performance cores. When combining SIMD vectorization with 8-thread execution (P+E cores), a peak 4.7&times; speedup is observed over the single-threaded scalar baseline.
 
 <p align="center">
-  <img src="figures/fig14_thread_scaling.png" alt="Thread Scaling" width="700">
+  <img src="./figures/fig14_thread_scaling.png" alt="Thread Scaling" width="700">
 </p>
 
 ### 4. Comparison vs. XGBoost
 Compared to the highly optimized XGBoost engine, our baseline is 1.2&ndash;5&times; slower. The gap is primarily due to advanced algorithmic optimizations in XGBoost, such as histogram subtraction and cache-aware layouts, rather than pure instruction-level differences.
 
 <p align="center">
-  <img src="figures/fig10_xgboost_ratio.png" alt="XGBoost Ratio" width="48%">
-  <img src="figures/fig16_xgboost_breakdown.png" alt="XGBoost Breakdown" width="48%">
+  <img src="./figures/fig10_xgboost_ratio.png" alt="XGBoost Ratio" width="48%">
+  <img src="./figures/fig16_xgboost_breakdown.png" alt="XGBoost Breakdown" width="48%">
 </p>
 
 ### 5. Sparse vs. Dense Layouts
 Interestingly, Compressed Sparse Row (CSR) layouts are 8&ndash;16&times; slower than our dense NEON implementation, even at 95% sparsity. The dense SIMD loop is so fast that the branching and indirect memory access overhead of CSR outweighs its benefits.
 
 <p align="center">
-  <img src="figures/fig2_sparse_vs_dense.png" alt="Sparse vs Dense" width="48%">
-  <img src="figures/fig3_neon_speedup_by_sparsity.png" alt="NEON Speedup by Sparsity" width="48%">
+  <img src="./figures/fig2_sparse_vs_dense.png" alt="Sparse vs Dense" width="48%">
+  <img src="./figures/fig3_neon_speedup_by_sparsity.png" alt="NEON Speedup by Sparsity" width="48%">
 </p>
 
 ### 6. Code Generation and Compilation
 Template-compiled tree evaluation is 1.71&times; faster than generic implementations, proving that eliminating dynamic branching at inference time provides substantial gains.
 
 <p align="center">
-  <img src="figures/fig4_compiled_eval.png" alt="Compiled Evaluation" width="48%">
-  <img src="figures/fig5_bin_ablation.png" alt="Compiler Bin Ablation" width="48%">
+  <img src="./figures/fig4_compiled_eval.png" alt="Compiled Evaluation" width="48%">
+  <img src="./figures/fig5_bin_ablation.png" alt="Compiler Bin Ablation" width="48%">
 </p>
 
 ### 7. Impact of Non-linear Math Operations (Logistic Loss)
 Computing the exponential function in logistic loss neutralizes most SIMD benefits, dropping the speedup from 1.35&times; to just 1.02&times;. Specialized vectorized math libraries or approximations are necessary to fully harness SIMD for non-linear loss functions.
 
 <p align="center">
-  <img src="figures/fig17_logistic_loss.png" alt="Logistic Loss" width="700">
+  <img src="./figures/fig17_logistic_loss.png" alt="Logistic Loss" width="700">
 </p>
 
 ## Platform
